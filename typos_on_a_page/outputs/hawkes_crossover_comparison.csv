@@ -1,0 +1,4 @@
+model,threshold_0.10,threshold_0.25,threshold_0.50,threshold_0.75,threshold_0.90
+independent calibrated,3,8,17,34,57
+markov tired typist,6,13,28,54,87
+hawkes baseline,8,21,50,99,165

@@ -1,4 +1,11 @@
+import argparse
 import csv
+from pathlib import Path
+
+import matplotlib
+
+matplotlib.use("Agg")
+
 import numpy as np
 import matplotlib.pyplot as plt
 from scipy.optimize import curve_fit
@@ -14,6 +21,9 @@ ALPHAS = np.linspace(0.0001, 0.0010, 100)
 THRESHOLDS = [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8]
 
 MAX_PAGES = 1000
+
+PROJECT_DIR = Path(__file__).resolve().parent.parent
+DEFAULT_OUTPUT_DIR = PROJECT_DIR / "outputs"
 
 # Output files
 VALUES_CSV = "crossover_values.csv"
@@ -247,24 +257,47 @@ def print_summary(thresholds, fit_results):
 # ============================================================
 # MAIN
 # ============================================================
-def main():
+def parse_args():
+    parser = argparse.ArgumentParser(
+        description="Generate CSVs and plots for the independent typo model."
+    )
+    parser.add_argument(
+        "--output-dir",
+        type=Path,
+        default=DEFAULT_OUTPUT_DIR,
+        help=(
+            "Directory for generated CSV and PNG files. "
+            "Defaults to typos_on_a_page/outputs/."
+        ),
+    )
+    return parser.parse_args()
+
+
+def main(output_dir):
+    output_dir.mkdir(parents=True, exist_ok=True)
+
     results = compute_crossover_table(ALPHAS, THRESHOLDS)
     fit_results = fit_all_curves(ALPHAS, results)
 
-    write_crossover_csv(VALUES_CSV, ALPHAS, THRESHOLDS, results)
-    write_fit_csv(FITS_CSV, THRESHOLDS, fit_results)
+    values_csv = output_dir / VALUES_CSV
+    fits_csv = output_dir / FITS_CSV
+    plot_data_only_path = output_dir / PLOT_DATA_ONLY
+    plot_with_fits_path = output_dir / PLOT_WITH_FITS
 
-    plot_data_only(ALPHAS, THRESHOLDS, results, PLOT_DATA_ONLY)
-    plot_data_and_fits(ALPHAS, THRESHOLDS, results, fit_results, PLOT_WITH_FITS)
+    write_crossover_csv(values_csv, ALPHAS, THRESHOLDS, results)
+    write_fit_csv(fits_csv, THRESHOLDS, fit_results)
+
+    plot_data_only(ALPHAS, THRESHOLDS, results, plot_data_only_path)
+    plot_data_and_fits(ALPHAS, THRESHOLDS, results, fit_results, plot_with_fits_path)
 
     print_summary(THRESHOLDS, fit_results)
 
     print("\nWrote files:")
-    print(f"  - {VALUES_CSV}")
-    print(f"  - {FITS_CSV}")
-    print(f"  - {PLOT_DATA_ONLY}")
-    print(f"  - {PLOT_WITH_FITS}")
+    print(f"  - {values_csv.resolve()}")
+    print(f"  - {fits_csv.resolve()}")
+    print(f"  - {plot_data_only_path.resolve()}")
+    print(f"  - {plot_with_fits_path.resolve()}")
 
 
 if __name__ == "__main__":
-    main()
+    main(parse_args().output_dir)

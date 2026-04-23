@@ -1,0 +1,39 @@
+import numpy as np
+import matplotlib.pyplot as plt
+
+# alphas to evaluate
+alphas = np.arange(0.0001, 0.0011, 0.0001)
+
+max_pages = 1000
+threshold_log = np.log(0.5)
+
+def find_crossover(alpha):
+    log_prob_no_typo = 0.0
+
+    for n in range(1, max_pages + 1):
+        p_m = 0.01 + alpha * n
+
+        # sanity check
+        if p_m >= 1:
+            return n
+
+        log_prob_no_typo += np.log(1 - p_m)
+
+        if log_prob_no_typo < threshold_log:
+            return n
+
+    return max_pages
+
+# compute crossover points
+crossover_points = [find_crossover(alpha) for alpha in alphas]
+
+# plot
+plt.figure()
+plt.plot(alphas, crossover_points, marker='o')
+plt.xlabel("alpha")
+plt.ylabel("n* (pages for P(≥1 typo) > 0.5)")
+plt.title("Crossover point vs increasing typo probability slope")
+plt.grid()
+
+plt.savefig("typo_crossover_vs_alpha.png")
+plt.show()
